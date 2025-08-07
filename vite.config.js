@@ -10,6 +10,6 @@ export default defineConfig({
     port: 5173,
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || 'http://localhost:4000'),
+    'import.meta.env.VITE_API_URL': JSON.stringify(  'https://docker-backend-3pzw.onrender.com'),
   },
 });
