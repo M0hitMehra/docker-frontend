@@ -10,7 +10,7 @@ export default defineConfig({
     port: 8080,
   },
   define: {
-    // 'import.meta.env.VITE_API_URL': JSON.stringify(  'https://docker-backend-3pzw.onrender.com'),
-    "import.meta.env.VITE_API_URL": JSON.stringify("http://localhost:5000"),
+    'import.meta.env.VITE_API_URL': JSON.stringify(  'https://docker-backend-3pzw.onrender.com'),
+    // "import.meta.env.VITE_API_URL": JSON.stringify("http://localhost:5000"),
   },
 });
