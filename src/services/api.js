@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const token = localStorage.getItem("refresh_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -53,7 +53,31 @@ api.interceptors.response.use(
       // Handle different HTTP status codes
       switch (response.status) {
         case 401:
-          // Unauthorized - try to refresh token
+          // Check if token is invalid or just expired
+          const errorMessage = response.data?.message || "";
+          const errorCode = response.data?.code || "";
+
+          // If token is invalid (not just expired), clear it immediately
+          if (
+            errorMessage.includes("Invalid token") ||
+            errorCode === "TOKEN_ERROR" ||
+            errorCode === "INVALID_TOKEN" ||
+            errorMessage.includes("Invalid token format")
+          ) {
+            console.warn("Invalid token detected, clearing storage");
+            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+            delete api.defaults.headers.common["Authorization"];
+
+            // Only redirect if we're not already on login page
+            if (window.location.pathname !== "/login") {
+              window.location.href = "/login";
+            }
+
+            return Promise.reject(error);
+          }
+
+          // For expired tokens or other 401s, try to refresh
           if (!originalRequest._retry) {
             if (isRefreshing) {
               // If already refreshing, queue this request
@@ -73,8 +97,23 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-              // Try to refresh token
-              const refreshResponse = await api.post("/api/auth/refresh");
+              // Try to refresh token using the current token
+              const currentToken = localStorage.getItem(
+                STORAGE_KEYS.AUTH_TOKEN
+              );
+              if (!currentToken) {
+                throw new Error("No token available for refresh");
+              }
+
+              const refreshResponse = await api.post(
+                "/api/auth/refresh",
+                {},
+                {
+                  headers: {
+                    Authorization: `Bearer ${currentToken}`,
+                  },
+                }
+              );
               const { token } =
                 refreshResponse.data.data || refreshResponse.data;
 
@@ -90,6 +129,7 @@ api.interceptors.response.use(
               processQueue(refreshError, null);
               localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
               localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+              delete api.defaults.headers.common["Authorization"];
 
               // Only redirect if we're not already on login page
               if (window.location.pathname !== "/login") {
@@ -99,6 +139,15 @@ api.interceptors.response.use(
               return Promise.reject(refreshError);
             } finally {
               isRefreshing = false;
+            }
+          } else {
+            // Retry already attempted, clear tokens and redirect
+            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+            delete api.defaults.headers.common["Authorization"];
+
+            if (window.location.pathname !== "/login") {
+              window.location.href = "/login";
             }
           }
           break;
@@ -198,7 +247,7 @@ export const apiService = {
 
   // Helper method to check if user is authenticated
   isAuthenticated: () => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN );
     return !!token;
   },
 
@@ -215,9 +264,14 @@ export const apiService = {
 
   // Helper method to clear authentication data
   clearAuth: () => {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN||"refresh_token");
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    localStorage.removeItem("refresh_token");
     delete api.defaults.headers.common["Authorization"];
+
+    // Also clear any other auth-related items
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_data");
   },
 
   // Helper method to set authentication token

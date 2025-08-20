@@ -42,11 +42,13 @@ export const useNotes = () => {
   const pinnedNotes = useAppSelector(selectPinnedNotes);
 
   // Load notes on mount and when auth state changes
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadNotes();
-    }
-  }, [isAuthenticated, showArchived]);
+  // Note: Using simple auth system now, so we'll need to handle this differently
+  // For now, let's manually trigger loadNotes when needed
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     loadNotes();
+  //   }
+  // }, [isAuthenticated, showArchived]);
 
   // Load notes function
   const loadNotes = useCallback(async () => {

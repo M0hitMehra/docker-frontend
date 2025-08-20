@@ -1,4 +1,14 @@
-import { apiService } from "./api.js";
+import { simpleApi } from "./simpleApi.js";
+
+// Helper function to handle API responses
+const handleApiResponse = (response, errorMessage) => {
+  const data = response.data;
+  if (data && data.success !== false) {
+    return data.data || data;
+  } else {
+    throw new Error(data?.message || data?.error || errorMessage);
+  }
+};
 
 export const notesService = {
   // Fetch all notes
@@ -14,8 +24,8 @@ export const notesService = {
       const queryString = params.toString();
       const url = `/api/notes${queryString ? `?${queryString}` : ""}`;
 
-      const response = await apiService.get(url);
-      return response.data.data || response.data;
+      const response = await simpleApi.get(url);
+      return handleApiResponse(response, "Failed to fetch notes");
     } catch (error) {
       throw new Error(error.message || "Failed to fetch notes");
     }
@@ -24,8 +34,8 @@ export const notesService = {
   // Get a single note by ID
   async getNoteById(id) {
     try {
-      const response = await apiService.get(`/api/notes/${id}`);
-      return response.data.data || response.data;
+      const response = await simpleApi.get(`/api/notes/${id}`);
+      return handleApiResponse(response, "Failed to fetch note");
     } catch (error) {
       throw new Error(error.message || "Failed to fetch note");
     }
@@ -34,8 +44,8 @@ export const notesService = {
   // Create a new note
   async createNote(noteData) {
     try {
-      const response = await apiService.post("/api/notes", noteData);
-      return response.data.data || response.data;
+      const response = await simpleApi.post("/api/notes", noteData);
+      return handleApiResponse(response, "Failed to create note");
     } catch (error) {
       throw new Error(error.message || "Failed to create note");
     }
@@ -44,8 +54,12 @@ export const notesService = {
   // Update an existing note
   async updateNote(id, noteData) {
     try {
-      const response = await apiService.put(`/api/notes/${id}`, noteData);
-      return response.data.data || response.data;
+      const response = await simpleApi.put(`/api/notes/${id}`, noteData);
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to update note");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to update note");
     }
@@ -54,8 +68,12 @@ export const notesService = {
   // Delete a note
   async deleteNote(id) {
     try {
-      const response = await apiService.delete(`/api/notes/${id}`);
-      return response.data;
+      const response = await simpleApi.delete(`/api/notes/${id}`);
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.error || "Failed to delete note");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to delete note");
     }
@@ -64,10 +82,17 @@ export const notesService = {
   // Archive/unarchive a note
   async archiveNote(id, archived = true) {
     try {
-      const response = await apiService.patch(`/api/notes/${id}/archive`, {
+      const response = await simpleApi.patch(`/api/notes/${id}/archive`, {
         archived,
       });
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(
+          response.error ||
+            `Failed to ${archived ? "archive" : "unarchive"} note`
+        );
+      }
     } catch (error) {
       throw new Error(
         error.message || `Failed to ${archived ? "archive" : "unarchive"} note`
@@ -78,10 +103,16 @@ export const notesService = {
   // Pin/unpin a note
   async pinNote(id, pinned = true) {
     try {
-      const response = await apiService.patch(`/api/notes/${id}/pin`, {
+      const response = await simpleApi.patch(`/api/notes/${id}/pin`, {
         pinned,
       });
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(
+          response.error || `Failed to ${pinned ? "pin" : "unpin"} note`
+        );
+      }
     } catch (error) {
       throw new Error(
         error.message || `Failed to ${pinned ? "pin" : "unpin"} note`
@@ -92,8 +123,12 @@ export const notesService = {
   // Export notes
   async exportNotes() {
     try {
-      const response = await apiService.get("/api/notes/export");
-      return response.data.data || response.data;
+      const response = await simpleApi.get("/api/notes/export");
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to export notes");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to export notes");
     }
@@ -111,10 +146,14 @@ export const notesService = {
       if (tags && tags.length > 0) params.append("tags", tags.join(","));
       if (archived) params.append("archived", "true");
 
-      const response = await apiService.get(
+      const response = await simpleApi.get(
         `/api/notes/search?${params.toString()}`
       );
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to search notes");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to search notes");
     }
@@ -123,8 +162,12 @@ export const notesService = {
   // Get notes statistics
   async getNotesStats() {
     try {
-      const response = await apiService.get("/api/notes/stats");
-      return response.data.data || response.data;
+      const response = await simpleApi.get("/api/notes/stats");
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to fetch notes statistics");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to fetch notes statistics");
     }
@@ -133,11 +176,15 @@ export const notesService = {
   // Bulk operations
   async bulkArchive(noteIds, archived = true) {
     try {
-      const response = await apiService.patch("/api/notes/bulk/archive", {
+      const response = await simpleApi.patch("/api/notes/bulk/archive", {
         noteIds,
         archived,
       });
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to bulk archive notes");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to bulk archive notes");
     }
@@ -145,10 +192,14 @@ export const notesService = {
 
   async bulkDelete(noteIds) {
     try {
-      const response = await apiService.delete("/api/notes/bulk", {
+      const response = await simpleApi.delete("/api/notes/bulk", {
         data: { noteIds },
       });
-      return response.data;
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.error || "Failed to bulk delete notes");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to bulk delete notes");
     }
@@ -156,11 +207,15 @@ export const notesService = {
 
   async bulkPin(noteIds, pinned = true) {
     try {
-      const response = await apiService.patch("/api/notes/bulk/pin", {
+      const response = await simpleApi.patch("/api/notes/bulk/pin", {
         noteIds,
         pinned,
       });
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to bulk pin notes");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to bulk pin notes");
     }
@@ -169,10 +224,14 @@ export const notesService = {
   // Import notes
   async importNotes(notesData) {
     try {
-      const response = await apiService.post("/api/notes/import", {
+      const response = await simpleApi.post("/api/notes/import", {
         notes: notesData,
       });
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to import notes");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to import notes");
     }
@@ -181,10 +240,14 @@ export const notesService = {
   // Get notes by category
   async getNotesByCategory(category) {
     try {
-      const response = await apiService.get(
+      const response = await simpleApi.get(
         `/api/notes?category=${encodeURIComponent(category)}`
       );
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to fetch notes by category");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to fetch notes by category");
     }
@@ -193,10 +256,14 @@ export const notesService = {
   // Get notes by tag
   async getNotesByTag(tag) {
     try {
-      const response = await apiService.get(
+      const response = await simpleApi.get(
         `/api/notes?tag=${encodeURIComponent(tag)}`
       );
-      return response.data.data || response.data;
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to fetch notes by tag");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to fetch notes by tag");
     }
@@ -205,8 +272,12 @@ export const notesService = {
   // Get all unique tags
   async getAllTags() {
     try {
-      const response = await apiService.get("/api/notes/tags");
-      return response.data.data || response.data;
+      const response = await simpleApi.get("/api/notes/tags");
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to fetch tags");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to fetch tags");
     }
@@ -215,8 +286,12 @@ export const notesService = {
   // Get all unique categories
   async getAllCategories() {
     try {
-      const response = await apiService.get("/api/notes/categories");
-      return response.data.data || response.data;
+      const response = await simpleApi.get("/api/notes/categories");
+      if (response.success) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.error || "Failed to fetch categories");
+      }
     } catch (error) {
       throw new Error(error.message || "Failed to fetch categories");
     }

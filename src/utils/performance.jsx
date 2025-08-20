@@ -206,12 +206,30 @@ export const analyzeBundleSize = () => {
 export const collectPerformanceMetrics = () => {
   const metrics = {};
 
-  // Navigation timing
-  if (typeof performance !== "undefined" && performance.timing) {
-    const timing = performance.timing;
-    metrics.pageLoad = timing.loadEventEnd - timing.navigationStart;
-    metrics.domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
-    metrics.firstPaint = timing.responseStart - timing.navigationStart;
+  // Navigation timing (using modern API)
+  if (typeof performance !== "undefined") {
+    try {
+      // Try modern Navigation Timing API first
+      if (performance.getEntriesByType) {
+        const navEntries = performance.getEntriesByType("navigation");
+        if (navEntries.length > 0) {
+          const nav = navEntries[0];
+          metrics.pageLoad = nav.loadEventEnd - nav.fetchStart;
+          metrics.domReady = nav.domContentLoadedEventEnd - nav.fetchStart;
+          metrics.firstPaint = nav.responseStart - nav.fetchStart;
+        }
+      }
+      // Fallback to deprecated API if modern one isn't available
+      else if (performance.timing) {
+        const timing = performance.timing;
+        metrics.pageLoad = timing.loadEventEnd - timing.navigationStart;
+        metrics.domReady =
+          timing.domContentLoadedEventEnd - timing.navigationStart;
+        metrics.firstPaint = timing.responseStart - timing.navigationStart;
+      }
+    } catch (error) {
+      console.warn("Performance timing measurement failed:", error);
+    }
   }
 
   // Paint timing
@@ -326,7 +344,14 @@ export const logPerformanceMetrics = () => {
     if (recommendations.length > 0) {
       console.group("💡 Recommendations");
       recommendations.forEach((rec) => {
-        console[rec.type](rec.message, rec.value);
+        // Use proper console methods
+        if (rec.type === "warning") {
+          console.warn(rec.message, rec.value);
+        } else if (rec.type === "error") {
+          console.error(rec.message, rec.value);
+        } else {
+          console.info(rec.message, rec.value);
+        }
       });
       console.groupEnd();
     }

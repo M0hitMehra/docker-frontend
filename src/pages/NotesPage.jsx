@@ -29,6 +29,24 @@ const NotesPage = () => {
     clearNotesError,
   } = useNotes();
 
+  // Load notes when component mounts
+  useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
+
+  // Listen for create new note events from header
+  useEffect(() => {
+    const handleCreateNewNote = () => {
+      handleCreateNote();
+    };
+
+    window.addEventListener("createNewNote", handleCreateNewNote);
+
+    return () => {
+      window.removeEventListener("createNewNote", handleCreateNewNote);
+    };
+  }, []);
+
   const { viewMode, showArchived } = useFilters();
   const {
     confirmDelete,

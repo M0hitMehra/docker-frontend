@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button, Input } from "../ui/index.js";
-import { useAuth } from "../../hooks/useAuth.js";
-import { useRememberMe } from "../../hooks/useRememberMe.js";
+import { useSimpleAuth } from "../../contexts/SimpleAuthContext.jsx";
 import { validateEmail, validatePassword } from "../../utils/validators.js";
 import { fadeInVariants } from "../../utils/animations.js";
 
 const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
-  const { login, loading, error, clearAuthError } = useAuth();
-  const { rememberMe, setRememberMe } = useRememberMe();
+  const { login, loading, error, clearError } = useSimpleAuth();
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -33,7 +32,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
     // Clear auth error when user starts typing
     if (error) {
-      clearAuthError();
+      clearError();
     }
   };
 
@@ -55,13 +54,10 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
     if (!validateForm()) return;
 
-    // Set remember me preference before login
-    setRememberMe(rememberMe);
-
     const result = await login(formData);
 
     if (result.success) {
-      onSuccess?.(result.data);
+      onSuccess?.();
     }
   };
 

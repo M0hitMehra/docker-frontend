@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import ProfileForm from "./ProfileForm.jsx";
 import AccountSettings from "./AccountSettings.jsx";
-import { useAuth } from "../../hooks/useAuth.js";
+import { useSimpleAuth } from "../../contexts/SimpleAuthContext.jsx";
 import { useProfile } from "../../hooks/useProfile.js";
 import { useNotifications } from "../../hooks/useNotifications.js";
 import {
@@ -16,7 +16,29 @@ import { fadeInVariants } from "../../utils/animations.js";
 import { formatDate } from "../../utils/dateUtils.js";
 
 const ProfilePage = () => {
-  const { user, getDisplayName, getUserInitials, changePassword } = useAuth();
+  const { user } = useSimpleAuth();
+
+  // Helper functions for display
+  const getDisplayName = () => {
+    if (!user) return "";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    if (user.firstName) return user.firstName;
+    if (user.lastName) return user.lastName;
+    return user.email || "";
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.firstName) return user.firstName[0].toUpperCase();
+    if (user.lastName) return user.lastName[0].toUpperCase();
+    if (user.email) return user.email[0].toUpperCase();
+    return "U";
+  };
   const { updateProfile, uploadAvatar, deleteAvatar, deleteAccount } =
     useProfile();
   const { showSuccess, showError } = useNotifications();

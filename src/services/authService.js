@@ -12,6 +12,9 @@ export const authService = {
       // Store tokens and user data using API service helper
       apiService.setAuthToken(accessToken);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      }
 
       return { user, token: accessToken, refreshToken };
     } catch (error) {
@@ -29,6 +32,9 @@ export const authService = {
       // Store tokens and user data using API service helper
       apiService.setAuthToken(accessToken);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      }
 
       return { user, token: accessToken, refreshToken };
     } catch (error) {
@@ -47,6 +53,7 @@ export const authService = {
     } finally {
       // Always clear authentication data using API service helper
       apiService.clearAuth();
+      localStorage.removeItem("refresh_token");
     }
   },
 

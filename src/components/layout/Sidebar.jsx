@@ -7,6 +7,7 @@ import { useUI } from "../../hooks/useUI.js";
 import { getPriorityColor } from "../../utils/colorUtils.js";
 import { CATEGORIES, PRIORITIES } from "../../utils/constants.js";
 import { Input, Button } from "../ui/index.js";
+import { MemoizedSearch } from "../common/MemoizedComponents.jsx";
 
 const Sidebar = ({ isOpen = false, onClose, onExport, className = "" }) => {
   const {
@@ -63,13 +64,10 @@ const Sidebar = ({ isOpen = false, onClose, onExport, className = "" }) => {
         style={{ background: "rgba(255,255,255,0.1)" }}
       >
         <label className="block mb-2 text-white/80">🔍 Search</label>
-        <Input
-          type="text"
+        <MemoizedSearch
           value={filters.search}
-          onChange={(e) => handleFilterChange("search", e.target.value)}
+          onChange={(value) => handleFilterChange("search", value)}
           placeholder="Search notes, tags..."
-          variant="filled"
-          fullWidth
         />
       </div>
 

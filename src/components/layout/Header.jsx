@@ -1,12 +1,55 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "../../hooks/useAuth.js";
+import { useNavigate } from "react-router-dom";
+import { useSimpleAuth } from "../../contexts/SimpleAuthContext.jsx";
 import { useUI } from "../../hooks/useUI.js";
+import { useFilters } from "../../hooks/useFilters.js";
 import { Button } from "../ui/index.js";
+import { ROUTES } from "../../utils/constants.js";
 
 const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
-  const { user, logout, getDisplayName, getUserInitials } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useSimpleAuth();
   const { darkMode, toggleTheme, isMobile } = useUI();
+  const { viewMode, toggleViewMode } = useFilters();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Helper functions for display
+  const getDisplayName = () => {
+    if (!user) return "";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    if (user.firstName) return user.firstName;
+    if (user.lastName) return user.lastName;
+    return user.email || "";
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.firstName) return user.firstName[0].toUpperCase();
+    if (user.lastName) return user.lastName[0].toUpperCase();
+    if (user.email) return user.email[0].toUpperCase();
+    return "U";
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -71,19 +114,21 @@ const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
+          onClick={toggleViewMode}
           className="p-2 sm:p-3 rounded-full backdrop-blur-xl border border-white/20 bg-white/10 hover:bg-white/20 transition-colors"
           aria-label="Toggle view mode"
-          title="Toggle view mode"
+          title={`Switch to ${viewMode === "grid" ? "list" : "grid"} view`}
         >
-          📋
+          {viewMode === "grid" ? "📋" : "⊞"}
         </motion.button>
 
         {/* User Menu */}
         {user && (
-          <div className="relative group">
+          <div className="relative group" ref={dropdownRef}>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 p-2 rounded-full backdrop-blur-xl border border-white/20 bg-white/10 hover:bg-white/20 transition-colors"
               aria-label="User menu"
             >
@@ -116,16 +161,21 @@ const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
             {/* Dropdown Menu */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 0, scale: 0.95, y: -10 }}
-              whileHover={{ opacity: 1, scale: 1, y: 0 }}
-              className="absolute right-0 top-full mt-2 w-48 py-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto"
+              animate={{
+                opacity: isDropdownOpen ? 1 : 0,
+                scale: isDropdownOpen ? 1 : 0.95,
+                y: isDropdownOpen ? 0 : -10,
+              }}
+              className={`absolute right-0 top-full mt-2 w-48 py-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl transition-all duration-200 ${
+                isDropdownOpen ? "pointer-events-auto" : "pointer-events-none"
+              }`}
             >
               {/* Profile Link */}
               <button
                 className="w-full px-4 py-2 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-2"
                 onClick={() => {
-                  // TODO: Navigate to profile page
-                  console.log("Navigate to profile");
+                  navigate(ROUTES.PROFILE);
+                  setIsDropdownOpen(false);
                 }}
               >
                 <svg
@@ -180,7 +230,10 @@ const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
               {/* Logout Button */}
               <button
                 className="w-full px-4 py-2 text-left text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2"
-                onClick={handleLogout}
+                onClick={() => {
+                  handleLogout();
+                  setIsDropdownOpen(false);
+                }}
               >
                 <svg
                   className="w-4 h-4"
@@ -207,8 +260,22 @@ const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
           whileTap={{ scale: 0.9 }}
           className="p-2 sm:p-3 rounded-full backdrop-blur-xl border border-white/20 bg-white/10 hover:bg-white/20 transition-colors"
           onClick={() => {
-            // Scroll to form or trigger new note
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            // Navigate to notes page first, then create new note
+            if (
+              window.location.pathname !== "/notes" &&
+              window.location.pathname !== "/"
+            ) {
+              navigate("/notes");
+              // Delay the event dispatch to allow navigation to complete
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent("createNewNote"));
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }, 100);
+            } else {
+              // Already on notes page, just dispatch event
+              window.dispatchEvent(new CustomEvent("createNewNote"));
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
           }}
           aria-label="Create new note"
           title="Create new note (Ctrl+N)"

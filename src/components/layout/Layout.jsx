@@ -3,13 +3,13 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Header from "./Header.jsx";
 import Sidebar from "./Sidebar.jsx";
 import { useUI } from "../../hooks/useUI.js";
-import { useAuth } from "../../hooks/useAuth.js";
+import { useSimpleAuth } from "../../contexts/SimpleAuthContext.jsx";
 import { COLORS } from "../../utils/constants.js";
 import { Notification } from "../ui/index.js";
 
 const Layout = ({ children, className = "" }) => {
   const { darkMode, sidebarOpen, setSidebarOpen, getThemeBackground } = useUI();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSimpleAuth();
   const containerRef = useRef(null);
   const [scrollY, setScrollY] = useState(0);
 

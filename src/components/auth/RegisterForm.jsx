@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button, Input } from "../ui/index.js";
-import { useAuth } from "../../hooks/useAuth.js";
+import { useSimpleAuth } from "../../contexts/SimpleAuthContext.jsx";
 import {
   validateEmail,
   validatePassword,
@@ -11,7 +11,7 @@ import {
 import { fadeInVariants } from "../../utils/animations.js";
 
 const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
-  const { register, loading, error, clearAuthError } = useAuth();
+  const { register, loading, error, clearError } = useSimpleAuth();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",

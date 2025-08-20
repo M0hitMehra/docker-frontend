@@ -196,7 +196,7 @@ export const useUI = () => {
   const getThemeBackground = useCallback(() => {
     return darkMode
       ? "linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 25%, #16213e 50%, #0f3460 100%)"
-      : "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 100%)";
+      : "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 100%)";
   }, [darkMode]);
 
   const getThemeTextColor = useCallback(() => {
