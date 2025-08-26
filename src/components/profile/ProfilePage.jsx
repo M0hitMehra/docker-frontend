@@ -81,8 +81,24 @@ const ProfilePage = () => {
   const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
     if (file) {
-      await uploadAvatar(file);
+      try {
+        const result = await uploadAvatar(file);
+        if (result.success) {
+          // Avatar uploaded successfully
+          console.log("Avatar uploaded successfully");
+        } else {
+          // Handle upload error without logout
+          console.error("Avatar upload failed:", result.error);
+        }
+      } catch (error) {
+        // Catch any unexpected errors and prevent logout
+        console.error("Unexpected avatar upload error:", error);
+        showError("Upload failed. Please try again.");
+      }
     }
+
+    // Clear the file input to allow re-uploading the same file
+    event.target.value = "";
   };
 
   const tabs = [

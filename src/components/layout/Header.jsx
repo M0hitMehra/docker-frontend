@@ -254,37 +254,46 @@ const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
           </div>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Plus Button */}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="p-2 sm:p-3 rounded-full backdrop-blur-xl border border-white/20 bg-white/10 hover:bg-white/20 transition-colors"
+          className="p-2 sm:p-3 rounded-full backdrop-blur-xl border border-white/20 bg-white/10 hover:bg-white/20 hover:border-white/40 transition-all duration-200 group"
           onClick={() => {
+            console.log(
+              "Plus button clicked, current path:",
+              window.location.pathname
+            );
             // Navigate to notes page first, then create new note
             if (
               window.location.pathname !== "/notes" &&
               window.location.pathname !== "/"
             ) {
+              console.log("Navigating to notes page...");
               navigate("/notes");
               // Delay the event dispatch to allow navigation to complete
               setTimeout(() => {
+                console.log("Dispatching createNewNote event after navigation");
                 window.dispatchEvent(new CustomEvent("createNewNote"));
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }, 100);
+              }, 150);
             } else {
               // Already on notes page, just dispatch event
+              console.log(
+                "Already on notes page, dispatching createNewNote event"
+              );
               window.dispatchEvent(new CustomEvent("createNewNote"));
-              window.scrollTo({ top: 0, behavior: "smooth" });
             }
           }}
           aria-label="Create new note"
-          title="Create new note (Ctrl+N)"
+          title="Create new note"
         >
-          <svg
-            className="w-5 h-5 text-white"
+          <motion.svg
+            className="w-5 h-5 text-white group-hover:text-white/90"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            whileHover={{ rotate: 90 }}
+            transition={{ duration: 0.2 }}
           >
             <path
               strokeLinecap="round"
@@ -292,7 +301,7 @@ const Header = ({ onToggleSidebar, scrollY = 0, className = "" }) => {
               strokeWidth={2}
               d="M12 4v16m8-8H4"
             />
-          </svg>
+          </motion.svg>
         </motion.button>
       </div>
     </motion.header>

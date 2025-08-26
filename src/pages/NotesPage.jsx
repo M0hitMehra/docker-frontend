@@ -34,19 +34,6 @@ const NotesPage = () => {
     loadNotes();
   }, [loadNotes]);
 
-  // Listen for create new note events from header
-  useEffect(() => {
-    const handleCreateNewNote = () => {
-      handleCreateNote();
-    };
-
-    window.addEventListener("createNewNote", handleCreateNewNote);
-
-    return () => {
-      window.removeEventListener("createNewNote", handleCreateNewNote);
-    };
-  }, []);
-
   const { viewMode, showArchived } = useFilters();
   const {
     confirmDelete,
@@ -60,10 +47,18 @@ const NotesPage = () => {
   const [editingNote, setEditingNote] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Load notes on component mount
+  // Listen for create new note events from header
   useEffect(() => {
-    loadNotes();
-  }, [loadNotes]);
+    const handleCreateNewNote = () => {
+      handleCreateNote();
+    };
+
+    window.addEventListener("createNewNote", handleCreateNewNote);
+
+    return () => {
+      window.removeEventListener("createNewNote", handleCreateNewNote);
+    };
+  }, []);
 
   // Clear errors when component unmounts
   useEffect(() => {
@@ -147,8 +142,17 @@ const NotesPage = () => {
   };
 
   const handleCreateNote = () => {
+    // Clear any existing editing note to show fresh form
     setEditingNote(null);
+    // Scroll to the top where the form is located
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Focus on the form after scrolling
+    setTimeout(() => {
+      const titleInput = document.querySelector('input[name="title"]');
+      if (titleInput) {
+        titleInput.focus();
+      }
+    }, 300);
   };
 
   // Find note being deleted for confirmation modal

@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("refresh_token");
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -247,7 +247,7 @@ export const apiService = {
 
   // Helper method to check if user is authenticated
   isAuthenticated: () => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN );
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     return !!token;
   },
 
@@ -264,7 +264,7 @@ export const apiService = {
 
   // Helper method to clear authentication data
   clearAuth: () => {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN||"refresh_token");
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN || "refresh_token");
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
     localStorage.removeItem("refresh_token");
     delete api.defaults.headers.common["Authorization"];

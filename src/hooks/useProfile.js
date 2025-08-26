@@ -1,10 +1,10 @@
 import { useCallback } from "react";
-import { useAuth } from "./useAuth.js";
+import { useSimpleAuth } from "../contexts/SimpleAuthContext.jsx";
 import { useNotifications } from "./useNotifications.js";
 import { userService } from "../services/userService.js";
 
 export const useProfile = () => {
-  const { user, updateProfile: updateAuthProfile } = useAuth();
+  const { user, updateProfile: updateAuthProfile } = useSimpleAuth();
   const { showSuccess, showError } = useNotifications();
 
   // Update user profile
@@ -58,13 +58,19 @@ export const useProfile = () => {
           throw new Error("File size must be less than 5MB");
         }
 
+        showSuccess("Uploading avatar... 📷");
         const updatedUser = await userService.uploadAvatar(file);
 
-        showSuccess("Avatar updated successfully! 📷");
+        showSuccess("Avatar updated successfully! ✨");
         return { success: true, data: updatedUser };
       } catch (error) {
-        showError(error.message || "Failed to upload avatar");
-        return { success: false, error: error.message };
+        console.error("Avatar upload error:", error);
+
+        // Don't trigger logout for upload errors - just show error message
+        const errorMessage = error.message || "Failed to upload avatar";
+        showError(`Upload failed: ${errorMessage}`);
+
+        return { success: false, error: errorMessage };
       }
     },
     [showSuccess, showError]
